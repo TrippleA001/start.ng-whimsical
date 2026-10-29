@@ -1,0 +1,866 @@
+/* =========================================================================
+   start.ng, verbatim — the live site's own stylesheet.
+   Nothing here restyles the catalogue.
+   ========================================================================= */
+@import "./startng.css";
+
+/* =========================================================================
+   The one addition: "The Dive".
+   Clicking a category tears a hole in the catalogue, the hole is a tunnel
+   lined with that category's games, and every card in the orbit is a door
+   you can play through without leaving the page.
+   ========================================================================= */
+
+:root {
+  --void: #08070c;
+  --void-2: #0c0b10;
+  --accent: #d8fd71;
+  --grot: "Space Grotesk", Helvetica Neue, Helvetica, Arial, system-ui, sans-serif;
+  --mono-face: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+body.is-locked {
+  overflow: hidden;
+}
+
+/* the catalogue desaturates while the hole opens */
+.paper {
+  transition: filter 480ms var(--ease-out), transform 640ms var(--ease-out);
+  transform-origin: 50% 42%;
+}
+
+.paper.is-torn {
+  filter: saturate(0.15) brightness(1.05);
+}
+
+.paper.is-buried {
+  pointer-events: none;
+}
+
+/* entering a game: the page falls away behind you */
+.paper.is-receding {
+  transform: scale(0.93);
+  filter: blur(14px) brightness(0.36) saturate(0.4);
+}
+
+.vortex.is-receding {
+  transform: scale(0.9);
+  filter: blur(10px) brightness(0.4);
+}
+
+/* category chips are the trigger — keep them unmistakable next to the
+   start.ng pill chips, using the live site's own language */
+.chips.dive-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 22px 0 6px;
+}
+
+.chips.dive-chips button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono-face);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.chips.dive-chips button:hover {
+  box-shadow: 4px 4px 0 var(--lime);
+  transform: translate(-1px, -1px);
+}
+
+.chips.dive-chips button i {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--dot-color, var(--lime));
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--dot-color, var(--lime)) 28%, transparent);
+  font-style: normal;
+}
+
+.chips.dive-chips button .count {
+  font-family: var(--mono-face);
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+/* our cards are <button>s — start.ng's cards are not */
+button.game {
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.dive-hint {
+  font-family: var(--mono-face);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+
+/* =========================================================================
+   The vortex overlay
+   ========================================================================= */
+
+.vortex {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--void);
+  color: #f4f3ef;
+  overflow: hidden;
+  clip-path: circle(0px at var(--tx, 50%) var(--ty, 50%));
+  transition:
+    clip-path 700ms var(--ease-in-out),
+    transform 640ms var(--ease-out),
+    filter 640ms ease;
+  will-change: clip-path;
+}
+
+.vortex.is-open {
+  clip-path: circle(150% at var(--tx, 50%) var(--ty, 50%));
+}
+
+.vortex[hidden] {
+  display: none;
+}
+
+.vortex__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* no webgl: the same tunnel, painted in CSS */
+.vortex--css {
+  background:
+    repeating-radial-gradient(
+      circle at var(--tx, 50%) var(--ty, 50%),
+      rgba(216, 253, 113, 0.1) 0 2px,
+      transparent 2px 62px
+    ),
+    radial-gradient(
+      circle at var(--tx, 50%) var(--ty, 50%),
+      rgba(216, 253, 113, 0.3) 0,
+      rgba(12, 11, 16, 0.92) 38%,
+      var(--void) 74%
+    );
+}
+
+.vortex__grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.14;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/></filter><rect width='140' height='140' filter='url(%23n)' opacity='0.55'/></svg>");
+}
+
+.vortex__ring {
+  position: absolute;
+  inset: 0;
+  perspective: 1150px;
+  perspective-origin: 50% 48%;
+  touch-action: pan-y;
+  /* beat 1 widens the field of view, beat 2 brakes it back */
+  transition: perspective 760ms var(--ease-out);
+}
+
+.vortex.is-press .vortex__ring,
+.vortex.is-dive .vortex__ring {
+  perspective: 420px;
+}
+
+/* ------------------------------------------------------------ the doors */
+
+.door {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  width: 236px;
+  margin: -76px 0 0 -118px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.vortex.is-orbit .door {
+  pointer-events: auto;
+}
+
+.door__body {
+  display: block;
+  position: relative;
+  background: var(--void-2);
+  border: 1px solid color-mix(in srgb, var(--door, #d8fd71) 34%, transparent);
+  border-radius: 16px;
+  padding: 8px 8px 10px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
+  animation: door-settle 640ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 26ms);
+  transition: box-shadow 260ms var(--ease-out), border-color 260ms ease;
+}
+
+@keyframes door-settle {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 0, -560px) rotateY(26deg);
+  }
+}
+
+.door.is-out .door__body {
+  animation: door-out 260ms cubic-bezier(0.55, 0, 1, 0.45) both;
+  animation-delay: calc(var(--i, 0) * 8ms);
+}
+
+@keyframes door-out {
+  to {
+    opacity: 0;
+    transform: translate3d(260px, -60px, -740px) rotateY(-40deg);
+  }
+}
+
+.door__media {
+  display: block;
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #05050a;
+}
+
+.door__media img,
+.door__media video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.door__media img {
+  transform: scale(1.03);
+  transition: transform 900ms var(--ease-out), opacity 240ms ease;
+}
+
+.door.is-live .door__media img {
+  opacity: 0;
+}
+
+.door__media video {
+  opacity: 0;
+  transition: opacity 260ms ease;
+}
+
+.door.is-live .door__media video {
+  opacity: 1;
+}
+
+.door__sheen {
+  position: absolute;
+  inset: -40%;
+  background: linear-gradient(
+    104deg,
+    transparent 42%,
+    rgba(255, 255, 255, 0.16) 50%,
+    transparent 58%
+  );
+  transform: translateX(-120%);
+  animation: sheen 7s var(--ease-in-out) infinite;
+  pointer-events: none;
+}
+
+@keyframes sheen {
+  0%,
+  62% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+.door__rarity {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: 10px 0 0 10px;
+  background: var(--door, #d8fd71);
+}
+
+.door__label {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 0 2px;
+  transform: translateY(6px);
+  opacity: 0.84;
+  transition: transform 240ms var(--ease-out), opacity 200ms ease;
+}
+
+.door__title {
+  display: block;
+  min-width: 0;
+  font-family: var(--grot);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.door__by {
+  display: block;
+  flex: none;
+  font-family: var(--mono-face);
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(244, 243, 239, 0.5);
+  white-space: nowrap;
+}
+
+.door__cta {
+  position: absolute;
+  left: 50%;
+  bottom: 44px;
+  transform: translate(-50%, 10px);
+  padding: 5px 16px;
+  border-radius: 999px;
+  background: var(--lime);
+  color: var(--ink);
+  font-family: var(--mono-face);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 180ms ease, transform 240ms var(--ease-out);
+  pointer-events: none;
+}
+
+.door.is-front .door__body {
+  border-color: color-mix(in srgb, var(--door, #d8fd71) 72%, transparent);
+  box-shadow:
+    0 26px 80px rgba(0, 0, 0, 0.62),
+    0 0 46px -8px color-mix(in srgb, var(--door, #d8fd71) 42%, transparent);
+}
+
+.door.is-front .door__label {
+  transform: none;
+  opacity: 1;
+}
+
+.door.is-front .door__cta {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.door__meta {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: -1.5rem;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono-face);
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(244, 243, 239, 0.42);
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.door.is-front .door__meta {
+  opacity: 1;
+}
+
+/* ------------------------------------------------------------- the HUD */
+
+.vortex__centre {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.vortex__centre b {
+  display: block;
+  font-family: var(--grot);
+  font-size: clamp(2.6rem, 9vw, 6.4rem);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 0.9;
+  color: transparent;
+  -webkit-text-stroke: 1.4px rgba(255, 255, 255, 0.32);
+}
+
+.vortex__centre span {
+  display: block;
+  margin-top: 0.7rem;
+  font-family: var(--mono-face);
+  font-size: 0.66rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--accent) 84%, white 16%);
+}
+
+.hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 420ms var(--ease-out);
+}
+
+.vortex.is-orbit .hud {
+  opacity: 1;
+}
+
+.hud > * {
+  pointer-events: auto;
+}
+
+.hud__rail {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: min(66vw, 720px);
+}
+
+.vchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(12, 11, 16, 0.7);
+  color: rgba(244, 243, 239, 0.66);
+  font-family: var(--mono-face);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 200ms ease, border-color 200ms ease, background 200ms ease;
+}
+
+.vchip:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.vchip[aria-current="true"] {
+  background: var(--accent);
+  color: var(--void);
+  border-color: var(--accent);
+}
+
+.vchip i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--vchip, #d8fd71);
+  font-style: normal;
+}
+
+.hud__exit {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--lime);
+  background: var(--lime);
+  color: var(--ink);
+  font-family: var(--mono-face);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 180ms var(--ease-out), box-shadow 180ms ease;
+}
+
+.hud__exit:hover {
+  transform: translateY(-1px);
+  box-shadow: 4px 4px 0 rgba(216, 253, 113, 0.28);
+}
+
+.hud__hint {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  font-family: var(--mono-face);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(244, 243, 239, 0.4);
+  white-space: nowrap;
+}
+
+/* the giant category word, stretched by the dive */
+.vortex__wall {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  transform: translate(-50%, -50%);
+  font-family: var(--grot);
+  font-size: clamp(6rem, 24vw, 18rem);
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  white-space: nowrap;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+  opacity: 0;
+}
+
+.vortex.is-dive .vortex__wall {
+  animation: wall-stretch 900ms var(--ease-out) both;
+}
+
+@keyframes wall-stretch {
+  0% {
+    opacity: 0;
+    letter-spacing: 0.5em;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+  32% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    letter-spacing: -0.06em;
+    transform: translate(-50%, -50%) scale(4.4);
+  }
+}
+
+/* reduced motion: no dive, no wall, no grain, no sheen */
+.vortex.is-calm {
+  transition-duration: 180ms;
+}
+
+.vortex.is-calm .vortex__wall,
+.vortex.is-calm .vortex__grain,
+.vortex.is-calm .door__sheen {
+  display: none;
+}
+
+.vortex.is-calm .door__body {
+  animation: none;
+}
+
+/* ================================================================
+   Launch — the card is the doorway
+   ================================================================ */
+
+/* the shockwave the click leaves behind */
+.burst {
+  position: fixed;
+  z-index: 55;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  border: 2px solid var(--lime);
+  box-shadow:
+    0 0 70px 14px rgba(216, 253, 113, 0.5),
+    inset 0 0 50px rgba(216, 253, 113, 0.35);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: burst 760ms var(--ease-out) forwards;
+}
+
+@keyframes burst {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 1;
+  }
+  38% {
+    opacity: 0.85;
+  }
+  100% {
+    width: 240vmax;
+    height: 240vmax;
+    opacity: 0;
+  }
+}
+
+/* ================================================================
+   The player — the card you clicked is the loading screen
+   ================================================================ */
+
+.player {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--void);
+  overflow: hidden;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+.player[hidden] {
+  display: none;
+}
+
+.player__stage {
+  position: absolute;
+  inset: 0;
+  background: #000;
+}
+
+.player__poster,
+.player__stage video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.player__poster {
+  transition: opacity 300ms ease;
+  transform-origin: 50% 50%;
+}
+
+.player__poster.is-gone {
+  opacity: 0;
+}
+
+.player__frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.player__frame.is-live {
+  opacity: 1;
+}
+
+.player__progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  transition: opacity 300ms ease;
+}
+
+.player__progress::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 38%;
+  background: var(--lime);
+  animation: sweep 1.15s var(--ease-in-out) infinite;
+}
+
+@keyframes sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+.player__progress.is-done {
+  opacity: 0;
+}
+
+.player__chrome {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(180deg, rgba(8, 7, 12, 0.94), transparent);
+  opacity: 0;
+  transition: opacity 360ms ease, transform 360ms var(--ease-out);
+}
+
+.player.is-landed .player__chrome {
+  opacity: 1;
+}
+
+.player.is-landed.is-idle .player__chrome {
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+}
+
+.pbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f4f3ef;
+  font-family: var(--mono-face);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 180ms ease, background 180ms ease;
+}
+
+.pbtn:hover {
+  border-color: var(--lime);
+  background: rgba(216, 253, 113, 0.16);
+}
+
+.pbtn--exit {
+  background: var(--lime);
+  color: var(--ink);
+  border-color: var(--lime);
+}
+
+.pbtn--exit:hover {
+  background: #e6ff92;
+  color: var(--ink);
+}
+
+.player__title {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.player__title b {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player__title span {
+  font-family: var(--mono-face);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(244, 243, 239, 0.5);
+  white-space: nowrap;
+}
+
+.player__tools {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.player__note {
+  position: absolute;
+  left: 50%;
+  bottom: 34px;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(8, 7, 12, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(244, 243, 239, 0.85);
+  font-family: var(--mono-face);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+  max-width: min(90vw, 480px);
+}
+
+/* ================================================================
+   Small screens
+   ================================================================ */
+
+@media (max-width: 720px) {
+  .door {
+    width: 204px;
+    margin-left: -102px;
+    margin-top: -68px;
+  }
+
+  .hud__rail {
+    max-width: calc(100vw - 28px);
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+
+  .hud__rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hud__hint {
+    display: none;
+  }
+
+  .hud__exit {
+    top: auto;
+    bottom: 14px;
+    right: 14px;
+  }
+
+  .player__title span {
+    display: none;
+  }
+}
