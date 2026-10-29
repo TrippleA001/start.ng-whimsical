@@ -1,0 +1,34 @@
+{
+  "name": "start-whimsical",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A playful 3D arcade concept for start.ng, borrowing the craft of lusion.co.",
+  "license": "MIT",
+  "packageManager": "pnpm@12.11.2",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "dev": "next dev -p 3001",
+    "build": "next build",
+    "start": "next start -p 3001",
+    "typecheck": "tsc --noEmit",
+    "check": "pnpm typecheck && pnpm build"
+  },
+  "dependencies": {
+    "gsap": "^3.15.0",
+    "lenis": "^1.3.27",
+    "next": "16.4.1",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.29",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "@types/three": "^0.186.0",
+    "playwright": "1.49.1",
+    "typescript": "^5.4.5"
+  }
+}
