@@ -1,0 +1,159 @@
+/* =========================================================================
+   Tournament — the one section that is not paper.
+   The DOM below is start.ng's tournament markup; once the WebGL layer has
+   proved it can render, the cards' own paint is dropped and Three.js takes
+   over. Everything else — hit areas, focus rings, links, screen-reader
+   text — stays exactly where the DOM put it.
+   ========================================================================= */
+
+.tournament-stage {
+  position: relative;
+  margin: 40px calc(50% - 50vw) 48px;
+  padding: 8px 0 44px;
+  color: #f4f3ef;
+  isolation: isolate;
+}
+
+/* the dark stage the section sits on */
+.tournament-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(120% 90% at 50% -10%, rgba(216, 253, 113, 0.09), transparent 55%),
+    radial-gradient(120% 120% at 50% 100%, #101019, #08070c 68%);
+  pointer-events: none;
+}
+
+.tournament-stage > :not(.tournament-canvas) {
+  position: relative;
+  z-index: 1;
+}
+
+.tournament-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ------------------------------------------------------- stage typography */
+
+.tournament-stage .tournament-page {
+  min-height: 0;
+  padding-bottom: 0;
+}
+
+.tournament-stage .section-head h2 {
+  color: #fff;
+}
+
+.tournament-stage .tournament-sub,
+.tournament-stage .tournament-sub a,
+.tournament-stage .note,
+.tournament-stage .tournament-status p {
+  color: rgba(244, 243, 239, 0.6);
+}
+
+.tournament-stage .tournament-sub a:hover {
+  color: var(--lime);
+}
+
+.tournament-stage .tournament-status {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.tournament-stage .tournament-status b {
+  color: var(--lime);
+}
+
+.tournament-stage .btn {
+  background: var(--lime);
+  color: var(--ink);
+}
+
+.tournament-stage .btn:hover {
+  background: #e6ff92;
+}
+
+/* ------------------------------------------------------- the DOM cards */
+
+.tournament-stage .tournament-games .game {
+  background: var(--card);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.tournament-stage .tournament-top li {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(244, 243, 239, 0.78);
+}
+
+.tournament-stage .tournament-top li.none {
+  color: rgba(244, 243, 239, 0.45);
+  background: none;
+}
+
+.tournament-stage .meta .play {
+  color: var(--lime);
+}
+
+.tournament-stage .tournament-columns h2,
+.tournament-stage .board-empty,
+.tournament-stage .winners,
+.tournament-stage .winners li {
+  color: rgba(244, 243, 239, 0.62);
+}
+
+.tournament-stage .tournament-columns h2 {
+  color: #fff;
+}
+
+.tournament-stage .winners .dot {
+  border-color: rgba(0, 0, 0, 0.25);
+}
+
+/* --------------------------------------------- once WebGL takes over */
+
+.tournament--gl .tournament-games .game {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* the card box survives — it is what the mesh is measured against — but
+   its own paint is dropped so nothing is drawn twice */
+.tournament--gl .tournament-games .game > * {
+  opacity: 0;
+}
+
+.tournament--gl .tournament-games .game:hover,
+.tournament--gl .tournament-games .game.is-t-hover {
+  transform: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* focus stays visible: keyboard users must always see where they are */
+.tournament--gl .tournament-games .game:focus-visible,
+.tournament--gl .tournament-games .game-link:focus-visible {
+  outline: 3px solid var(--lime);
+  outline-offset: 4px;
+}
+
+/* the DOM hover state mirrors the shader's spring */
+.tournament-games .game.is-t-hover {
+  border-color: var(--lime);
+  box-shadow: 4px 4px 0 rgba(216, 253, 113, 0.35);
+}
+
+@media (max-width: 760px) {
+  .tournament-stage {
+    margin-block: 28px 36px;
+    padding-bottom: 28px;
+  }
+}
