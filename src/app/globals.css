@@ -98,6 +98,29 @@ button.game {
   cursor: pointer;
   -webkit-appearance: none;
   appearance: none;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+button.game.shake {
+  animation: shake 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+button.game.dissolve {
+  animation: dissolve 0.42s ease forwards;
+  pointer-events: none;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  25% { transform: translate3d(-6px, 0, 0) rotate(-1.5deg); }
+  50% { transform: translate3d(6px, 0, 0) rotate(1.5deg); }
+  75% { transform: translate3d(-3px, 0, 0) rotate(-0.75deg); }
+}
+
+@keyframes dissolve {
+  from { transform: translate3d(0, 0, 0) scale(1); opacity: 1; filter: blur(0); }
+  to { transform: translate3d(0, 0, -400px) scale(0.4); opacity: 0; filter: blur(14px); }
 }
 
 .dive-hint {
