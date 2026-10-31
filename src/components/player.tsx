@@ -61,9 +61,12 @@ export default function Player({
   const [videoBroken, setVideoBroken] = useState(false);
   const [exitPos, setExitPos] = useState({ x: 0, y: 0 });
   const [exitLocked, setExitLocked] = useState(false);
+  const [fleeCooldown, setFleeCooldown] = useState(false);
   const exitBtnRef = useRef<HTMLButtonElement>(null);
   const exitTimer = useRef<number>(0);
+  const cooldownTimer = useRef<number>(0);
   const FLEE_LOCK_MS = 5000;
+  const FLEE_COOLDOWN_MS = 1000;
 
   useEffect(() => {
     void loadPreviews().then(setPreviews);
@@ -188,6 +191,7 @@ export default function Player({
 
   /* ------------------------------------------------ runaway exit */
   const flee = useCallback(() => {
+    if (fleeCooldown) return;
     const btn = exitBtnRef.current;
     if (!btn) return;
     const vw = window.innerWidth;
@@ -201,8 +205,13 @@ export default function Player({
     if (exitTimer.current) window.clearTimeout(exitTimer.current);
     exitTimer.current = window.setTimeout(() => {
       setExitLocked(false);
+      // give the user a 1s window to actually click before it can flee again
+      setFleeCooldown(true);
+      cooldownTimer.current = window.setTimeout(() => {
+        setFleeCooldown(false);
+      }, FLEE_COOLDOWN_MS);
     }, FLEE_LOCK_MS);
-  }, []);
+  }, [fleeCooldown]);
 
   const handleExitClick = useCallback(
     (event: React.MouseEvent) => {
@@ -219,6 +228,7 @@ export default function Player({
   useEffect(() => {
     return () => {
       if (exitTimer.current) window.clearTimeout(exitTimer.current);
+      if (cooldownTimer.current) window.clearTimeout(cooldownTimer.current);
     };
   }, []);
 
