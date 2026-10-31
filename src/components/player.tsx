@@ -67,9 +67,15 @@ export default function Player({
   const cooldownTimer = useRef<number>(0);
   const FLEE_LOCK_MS = 5000;
   const FLEE_COOLDOWN_MS = 1000;
+  const fleeReady = useRef(false);
 
   useEffect(() => {
     void loadPreviews().then(setPreviews);
+    // let the button settle at its natural position before allowing flee
+    const t = window.setTimeout(() => {
+      fleeReady.current = true;
+    }, 100);
+    return () => window.clearTimeout(t);
   }, []);
 
   /* --------------------------------------------------- open / close */
@@ -191,7 +197,7 @@ export default function Player({
 
   /* ------------------------------------------------ runaway exit */
   const flee = useCallback(() => {
-    if (fleeCooldown) return;
+    if (!fleeReady.current || fleeCooldown) return;
     const btn = exitBtnRef.current;
     if (!btn) return;
     const vw = window.innerWidth;
