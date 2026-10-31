@@ -67,11 +67,12 @@ body.is-locked {
   font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  transform: translate3d(var(--mx, 0px), var(--my, 0px), 0);
+  transition: transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out);
 }
 
 .chips.dive-chips button:hover {
   box-shadow: 4px 4px 0 var(--lime);
-  transform: translate(-1px, -1px);
 }
 
 .chips.dive-chips button i {
@@ -121,6 +122,105 @@ button.game.dissolve {
 @keyframes dissolve {
   from { transform: translate3d(0, 0, 0) scale(1); opacity: 1; filter: blur(0); }
   to { transform: translate3d(0, 0, -400px) scale(0.4); opacity: 0; filter: blur(14px); }
+}
+
+/* =========================================================================
+   Whimsy — eyes, jelly neighbours, paper confetti
+   ========================================================================= */
+
+/* googly eyes on the artwork, following the pointer */
+.googly {
+  position: absolute;
+  left: 10px;
+  bottom: 9px;
+  display: flex;
+  gap: 5px;
+  opacity: 0;
+  transform: translateY(6px) rotate(-6deg);
+  transition: opacity 180ms var(--ease-out), transform 220ms var(--ease-out);
+  pointer-events: none;
+}
+
+button.game:hover .googly,
+button.game:focus-visible .googly {
+  opacity: 1;
+  transform: translateY(0) rotate(-3deg);
+}
+
+.googly__eye {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #fffefa;
+  border: 1.5px solid var(--ink);
+  box-shadow: 0 1px 0 rgba(41, 42, 35, 0.35);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.googly__eye i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink);
+  transform: translate3d(var(--gx, 0px), var(--gy, 0px), 0);
+  transition: transform 90ms linear;
+}
+
+/* jelly neighbours — hovering a card nudges the ones beside it */
+button.game:has(+ button.game:hover) {
+  transform: translate3d(-3px, 2px, 0) rotate(-0.7deg);
+}
+
+button.game:hover + button.game {
+  transform: translate3d(3px, 2px, 0) rotate(0.7deg);
+}
+
+/* paper confetti torn from the card on click */
+.paper-shard {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 60;
+  width: 9px;
+  height: 13px;
+  margin: -6px 0 0 -4px;
+  background: var(--c, var(--lime));
+  border: 1px solid rgba(41, 42, 35, 0.25);
+  border-radius: 2px;
+  pointer-events: none;
+  transform: translate3d(var(--x, 0px), var(--y, 0px), 0);
+  animation: paper-fly 900ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+
+@keyframes paper-fly {
+  0% {
+    transform: translate3d(var(--x, 0px), var(--y, 0px), 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(
+        calc(var(--x, 0px) + var(--dx, 0px)),
+        calc(var(--y, 0px) + var(--dy, 0px) + 140px),
+        0
+      )
+      rotate(var(--rot, 0deg)) scale(0.55);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .googly {
+    display: none;
+  }
+  .paper-shard {
+    display: none;
+  }
+  button.game:has(+ button.game:hover),
+  button.game:hover + button.game {
+    transform: none;
+  }
 }
 
 .dive-hint {
