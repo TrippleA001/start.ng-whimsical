@@ -23,6 +23,19 @@ export default function CategoryChip({
       type="button"
       className={phase !== "idle" ? "on" : undefined}
       style={{ "--dot-color": category.accent } as React.CSSProperties}
+      onMouseMove={(event) => {
+        /* magnetic — the chip leans toward the pointer, never far */
+        const el = event.currentTarget;
+        const rect = el.getBoundingClientRect();
+        const dx = (event.clientX - (rect.left + rect.width / 2)) / (rect.width / 2);
+        const dy = (event.clientY - (rect.top + rect.height / 2)) / (rect.height / 2);
+        el.style.setProperty("--mx", `${dx * 5}px`);
+        el.style.setProperty("--my", `${dy * 4}px`);
+      }}
+      onMouseLeave={(event) => {
+        event.currentTarget.style.setProperty("--mx", "0px");
+        event.currentTarget.style.setProperty("--my", "0px");
+      }}
       onClick={(event) => {
         const rect = event.currentTarget.getBoundingClientRect();
         const fromKeyboard = event.clientX === 0 && event.clientY === 0;
