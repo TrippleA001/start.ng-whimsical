@@ -44,6 +44,7 @@ export default function GameCard({ game, rarity }: { game: Game; rarity: string 
 
   const handleMouseEnter = (event: React.MouseEvent<HTMLButtonElement>) => {
     shakeCard(event.currentTarget);
+    nudgeNeighbours(event.currentTarget);
     preconnect(host);
   };
 
@@ -60,6 +61,7 @@ export default function GameCard({ game, rarity }: { game: Game; rarity: string 
 
   const handleMouseLeave = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.currentTarget.classList.remove("shake");
+    calmNeighbours(event.currentTarget);
     event.currentTarget.style.setProperty("--gx", "0px");
     event.currentTarget.style.setProperty("--gy", "0px");
   };
@@ -104,6 +106,30 @@ export default function GameCard({ game, rarity }: { game: Game; rarity: string 
 function shakeCard(el: Element) {
   el.classList.add("shake");
   window.setTimeout(() => el.classList.remove("shake"), 320);
+}
+
+/* jelly neighbours — the cards either side lean away from the pointer.
+   These live in <li> wrappers, so the siblings are list items, not cards. */
+function nudgeNeighbours(el: Element) {
+  const item = el.closest("li");
+  if (!item) return;
+  item.previousElementSibling
+    ?.querySelector("button.game")
+    ?.classList.add("jelly-left");
+  item.nextElementSibling
+    ?.querySelector("button.game")
+    ?.classList.add("jelly-right");
+}
+
+function calmNeighbours(el: Element) {
+  const item = el.closest("li");
+  if (!item) return;
+  item.previousElementSibling
+    ?.querySelector("button.game")
+    ?.classList.remove("jelly-left");
+  item.nextElementSibling
+    ?.querySelector("button.game")
+    ?.classList.remove("jelly-right");
 }
 
 /* paper confetti — shards tear off the card and flutter down */
