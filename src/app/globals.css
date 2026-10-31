@@ -168,13 +168,24 @@ button.game:focus-visible .googly {
   transition: transform 90ms linear;
 }
 
-/* jelly neighbours — hovering a card nudges the ones beside it */
-button.game:has(+ button.game:hover) {
-  transform: translate3d(-3px, 2px, 0) rotate(-0.7deg);
+/* jelly neighbours — hovering a card nudges the ones beside it.
+   Cards live inside shelf <li>s, so the sibling is the list item.
+   The JS adds .jelly-left/.jelly-right as a guaranteed path; the :has()
+   rules below are the no-JS fallback. */
+button.game.jelly-left {
+  transform: translate3d(-6px, 3px, 0) rotate(-1.2deg);
 }
 
-button.game:hover + button.game {
-  transform: translate3d(3px, 2px, 0) rotate(0.7deg);
+button.game.jelly-right {
+  transform: translate3d(6px, 3px, 0) rotate(1.2deg);
+}
+
+.shelf li:has(+ li > button.game:hover) > button.game {
+  transform: translate3d(-6px, 3px, 0) rotate(-1.2deg);
+}
+
+.shelf li:has(> button.game:hover) + li > button.game {
+  transform: translate3d(6px, 3px, 0) rotate(1.2deg);
 }
 
 /* paper confetti torn from the card on click */
@@ -217,8 +228,10 @@ button.game:hover + button.game {
   .paper-shard {
     display: none;
   }
-  button.game:has(+ button.game:hover),
-  button.game:hover + button.game {
+  .shelf li:has(+ li > button.game:hover) > button.game,
+  .shelf li:has(> button.game:hover) + li > button.game,
+  button.game.jelly-left,
+  button.game.jelly-right {
     transform: none;
   }
 }
