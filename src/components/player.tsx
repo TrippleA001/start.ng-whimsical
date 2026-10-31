@@ -59,6 +59,11 @@ export default function Player({
   const [idle, setIdle] = useState(false);
   const [previews, setPreviews] = useState<PreviewMap>({});
   const [videoBroken, setVideoBroken] = useState(false);
+  const [exitPos, setExitPos] = useState({ x: 0, y: 0 });
+  const [exitLocked, setExitLocked] = useState(false);
+  const exitBtnRef = useRef<HTMLButtonElement>(null);
+  const exitTimer = useRef<number>(0);
+  const FLEE_LOCK_MS = 5000;
 
   useEffect(() => {
     void loadPreviews().then(setPreviews);
@@ -181,6 +186,42 @@ export default function Player({
     window.setTimeout(finish, FLIP_OUT + 120);
   }, [onExit, rect, slug]);
 
+  /* ------------------------------------------------ runaway exit */
+  const flee = useCallback(() => {
+    const btn = exitBtnRef.current;
+    if (!btn) return;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const btnW = btn.offsetWidth || 100;
+    const btnH = btn.offsetHeight || 40;
+    const x = Math.random() * Math.max(0, vw - btnW - 40) + 20;
+    const y = Math.random() * Math.max(0, vh - btnH - 40) + 20;
+    setExitPos({ x, y });
+    setExitLocked(true);
+    if (exitTimer.current) window.clearTimeout(exitTimer.current);
+    exitTimer.current = window.setTimeout(() => {
+      setExitLocked(false);
+    }, FLEE_LOCK_MS);
+  }, []);
+
+  const handleExitClick = useCallback(
+    (event: React.MouseEvent) => {
+      if (exitLocked) {
+        event.preventDefault();
+        flee(); // tease them again if they try to click while locked
+        return;
+      }
+      close();
+    },
+    [exitLocked, flee, close],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (exitTimer.current) window.clearTimeout(exitTimer.current);
+    };
+  }, []);
+
   if (!game) return null;
 
   const poster = game.cover.startsWith("/")
@@ -236,8 +277,18 @@ export default function Player({
       </div>
 
       <div className="player__chrome">
-        <button type="button" className="pbtn pbtn--exit" onClick={close}>
-          Exit
+        <button
+          type="button"
+          ref={exitBtnRef}
+          className={`pbtn pbtn--exit${exitLocked ? " is-locked" : ""}`}
+          onMouseEnter={flee}
+          onClick={handleExitClick}
+          style={{
+            transform: `translate(${exitPos.x}px, ${exitPos.y}px)`,
+            transition: "transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)",
+          }}
+        >
+          {exitLocked ? "Nope!" : "Exit"}
         </button>
         <div className="player__title">
           <b>{game.title}</b>
